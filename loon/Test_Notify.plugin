@@ -1,0 +1,20 @@
+#!name = Loon Test Notify
+#!desc = 用于验证 Loon 插件、脚本触发和本地通知是否正常工作的实验插件。
+#!author = GitHub Copilot
+#!homepage = https://nsloon.app/docs/Plugin/
+#!system = iOS,iPadOS
+#!loon_version = 3.2.1(733)
+#!tag = 测试,通知,调试
+
+[Argument]
+cronexp = input,"*/2 * * * *",tag=定时表达式,desc=默认每 2 分钟运行一次
+triggerNotify = switch,true,tag=启用定时脚本,desc=关闭后 cron 脚本不运行
+useNetworkChanged = switch,true,tag=启用网络变化触发,desc=网络变化时也触发测试通知
+showDebug = switch,true,tag=显示调试信息,desc=通知中附带脚本名和当前 SSID
+notifyTitle = input,"Loon 实验插件",tag=通知标题,desc=自定义通知标题
+notifySubtitle = input,"脚本已成功运行",tag=通知副标题,desc=自定义通知副标题
+notifyContent = input,"如果你看到了这条通知，说明插件触发、脚本加载、通知能力都正常。",tag=通知正文,desc=自定义通知正文
+
+[Script]
+cron {cronexp} script-path=https://example.com/path/to/test_notify.js,timeout=10,tag=Loon实验通知Cron,argument=[{showDebug},{notifyTitle},{notifySubtitle},{notifyContent}],enable={triggerNotify}
+network-changed script-path=https://example.com/path/to/test_notify.js,timeout=10,tag=Loon实验通知NetworkChanged,argument=[{showDebug},{notifyTitle},{notifySubtitle},{notifyContent}],enable={useNetworkChanged}
