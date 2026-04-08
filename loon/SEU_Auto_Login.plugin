@@ -1,0 +1,22 @@
+#!name = SEU Auto Login
+#!desc = 东南大学校园网自动登录插件：仅在连接 SEU-ISP / SEU-WLAN / SEU* Wi-Fi 时检测状态，未登录则自动登录，并在成功后发送通知。
+#!author = GitHub Copilot
+#!homepage = https://github.com/Loon0x00/LoonExampleConfig
+#!system = iOS,iPadOS
+#!loon_version = 3.2.1(733)
+#!tag = 网络,校园网,自动登录
+
+[Argument]
+username = input,"220252341",tag=校园网账号,desc=请输入东南大学校园网账号
+password = input,"",tag=校园网密码,desc=请输入校园网密码
+cronexp = input,"*/3 * * * *",tag=定时执行表达式,desc=cron 表达式，默认每 3 分钟执行一次
+notifyOnSuccess = switch,true,tag=成功通知,desc=登录成功后发送通知
+notifyOnFailure = switch,false,tag=失败通知,desc=登录失败后发送通知
+throttleSec = input,"600",tag=通知节流秒数,desc=相同成功结果在该时间内不重复通知
+
+[Script]
+cron {cronexp} script-path=https://raw.githubusercontent.com/placeholder/placeholder/main/seu_auto_login.js,timeout=20,tag=SEU自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
+network-changed script-path=https://raw.githubusercontent.com/placeholder/placeholder/main/seu_auto_login.js,timeout=20,tag=SEU网络变化自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
+
+[MITM]
+hostname = w.seu.edu.cn
