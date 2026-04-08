@@ -1,4 +1,4 @@
-/*********************************
+/*
  * Loon cron / network-changed Script
  * 东南大学校园网自动登录（SEU-ISP / SEU-WLAN）
  *
@@ -16,7 +16,7 @@
  * 使用前必须修改：
  * - CONFIG.username
  * - CONFIG.password
- *********************************/
+*/
 
 const CONFIG = {
   username: "220252341",
