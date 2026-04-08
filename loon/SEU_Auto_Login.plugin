@@ -15,8 +15,8 @@ notifyOnFailure = switch,false,tag=失败通知,desc=登录失败后发送通知
 throttleSec = input,"600",tag=通知节流秒数,desc=相同成功结果在该时间内不重复通知
 
 [Script]
-cron {cronexp} script-path=https://raw.githubusercontent.com/placeholder/placeholder/main/seu_auto_login.js,timeout=20,tag=SEU自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
-network-changed script-path=https://raw.githubusercontent.com/placeholder/placeholder/main/seu_auto_login.js,timeout=20,tag=SEU网络变化自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
+cron {cronexp} script-path=https://raw.githubusercontent.com/jiehu0/Self_use_rule_materials/refs/heads/main/loon/seu_auto_login.js,timeout=20,tag=SEU自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
+network-changed script-path=https://raw.githubusercontent.com/jiehu0/Self_use_rule_materials/refs/heads/main/loon/seu_auto_login.js,timeout=20,tag=SEU网络变化自动登录,argument=[{username},{password},{notifyOnSuccess},{notifyOnFailure},{throttleSec}],enable=true
 
 [MITM]
 hostname = w.seu.edu.cn
