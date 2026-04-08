@@ -22,6 +22,7 @@ const CONFIG = {
   username: "220252341",
   password: "YOUR_PASSWORD",
   jsVersionFallback: "3.3.3",
+  debug: false,
 
   targetSSIDs: ["SEU-ISP", "SEU-WLAN"],
   targetPrefix: "SEU",
@@ -65,15 +66,41 @@ if (typeof $argument !== "undefined") {
       CONFIG.successNotifyThrottleSec = parsed;
     }
   }
+  if ($argument.debug !== undefined) {
+    CONFIG.debug = String($argument.debug) === "true";
+  }
 }
 
 const STORE_KEYS = {
   lastNotifyTime: "seu_loon_last_success_notify_time",
-  lastNotifySig: "seu_loon_last_success_notify_sig"
+  lastNotifySig: "seu_loon_last_success_notify_sig",
+  debugLog: "seu_loon_debug_log"
 };
 
 function log(msg) {
-  console.log("[SEU-Loon] " + msg);
+  const line = "[SEU-Loon] " + msg;
+  console.log(line);
+  appendDebugLog(line);
+}
+
+function appendDebugLog(line) {
+  try {
+    const oldLog = readStore(STORE_KEYS.debugLog);
+    const merged = (oldLog ? oldLog + "\n" : "") + new Date().toISOString() + " " + line;
+    const trimmed = merged.split("\n").slice(-120).join("\n");
+    writeStore(STORE_KEYS.debugLog, trimmed);
+  } catch (e) {}
+}
+
+function debug(msg) {
+  if (CONFIG.debug) {
+    log("DEBUG: " + msg);
+  }
+}
+
+function debugNotify(title, subtitle, content) {
+  if (!CONFIG.debug) return;
+  notify(title, subtitle, content);
 }
 
 function done(msg) {
@@ -108,6 +135,7 @@ function writeStore(key, value) {
 function getConfig() {
   try {
     const raw = $config.getConfig();
+    debug("$config.getConfig raw=" + String(raw).slice(0, 300));
     return typeof raw === "string" ? JSON.parse(raw) : raw;
   } catch (e) {
     log("读取配置失败: " + e);
@@ -117,7 +145,9 @@ function getConfig() {
 
 function getSSID() {
   const conf = getConfig();
-  return conf && conf.ssid ? String(conf.ssid).trim() : "";
+  const ssid = conf && conf.ssid ? String(conf.ssid).trim() : "";
+  debug("当前 ssid=" + ssid);
+  return ssid;
 }
 
 function isTargetSSID(ssid) {
@@ -160,12 +190,16 @@ function httpGet(paramsOrUrl) {
     ? { url: paramsOrUrl, headers: CONFIG.headers, timeout: 8000 }
     : Object.assign({ headers: CONFIG.headers, timeout: 8000 }, paramsOrUrl);
 
+  debug("HTTP GET => " + params.url);
+
   return new Promise((resolve, reject) => {
     $httpClient.get(params, (error, response, data) => {
       if (error) {
+        debug("HTTP ERROR <= " + params.url + " err=" + error);
         reject(error);
         return;
       }
+      debug("HTTP RESP <= " + params.url + " status=" + (response && response.status) + " body=" + String(data || "").slice(0, 200));
       resolve({
         status: response && response.status,
         headers: response && response.headers,
@@ -245,6 +279,8 @@ async function fetchTerminalInfo() {
 
       const mac = normalizeMac(payload.ss4 || payload.olmac || payload.usermac || payload.mac || "");
 
+      debug("terminal info parsed from chkstatus ip=" + ip + " mac=" + mac);
+
       if (ip || mac) {
         return { ip: String(ip || "").trim(), mac };
       }
@@ -260,6 +296,7 @@ async function buildContext() {
   const ssid = getSSID();
   const term = await fetchTerminalInfo();
   const jsVersion = await fetchJsVersion();
+  debug("buildContext => ssid=" + ssid + ", ip=" + term.ip + ", mac=" + term.mac + ", jsVersion=" + jsVersion);
   return { ssid, mac: term.mac, ip: term.ip || await getIP(), jsVersion };
 }
 
@@ -361,14 +398,26 @@ function notifyFailure(ctx, msg) {
 
 (async function main() {
   try {
+    debug("脚本启动 name=" + ($script && $script.name ? $script.name : "unknown"));
     const ssid = getSSID();
+    debugNotify(
+      "SEU 调试启动",
+      "脚本已触发",
+      "脚本: " + (($script && $script.name) || "unknown") + "\nSSID: " + (ssid || "<empty>")
+    );
     if (!isTargetSSID(ssid)) {
+      debugNotify("SEU 调试状态", "未命中目标 Wi‑Fi", "当前 SSID: " + (ssid || "<empty>"));
       done("当前非 SEU Wi-Fi，跳过");
       return;
     }
 
     const ctx = await buildContext();
     log("当前环境 ssid=" + ctx.ssid + ", ip=" + ctx.ip + ", mac=" + ctx.mac);
+    debugNotify(
+      "SEU 调试状态",
+      "已命中目标 Wi‑Fi",
+      "SSID: " + (ctx.ssid || "<empty>") + "\nIP: " + (ctx.ip || "<empty>") + "\nMAC: " + (ctx.mac || "<empty>")
+    );
 
     if (!ctx.mac) {
       notify(
