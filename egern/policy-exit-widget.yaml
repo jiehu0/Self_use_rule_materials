@@ -1,0 +1,27 @@
+name: "策略出口小组件"
+description: "展示两个自选策略组当前实际使用的出口地区、IP、ASN、ISP 和探测延迟"
+author: "jiehu0"
+homepage: "https://github.com/jiehu0/Self_use_rule_materials"
+manual: "https://github.com/jiehu0/Self_use_rule_materials/tree/main/egern"
+icon: "point.3.connected.trianglepath.dotted"
+
+env_schema:
+  GROUP_1:
+    name: "展示分组 1"
+    description: "填写 Egern 中完整的策略组名称"
+    default_value: "策略选择"
+  GROUP_2:
+    name: "展示分组 2"
+    description: "填写 Egern 中完整的策略组名称"
+    default_value: "人工智能"
+
+scriptings:
+  - generic:
+      name: "策略出口"
+      script_url: "https://raw.githubusercontent.com/jiehu0/Self_use_rule_materials/main/egern/policy-exit-widget.js"
+      update_interval: 86400
+      timeout: 20
+
+widgets:
+  - name: "策略出口"
+    script_name: "策略出口"
