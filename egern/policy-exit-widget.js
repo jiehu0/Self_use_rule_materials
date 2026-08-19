@@ -28,8 +28,14 @@ export default async function (ctx) {
   if (family === "accessoryRectangular") {
     return renderRectangular(results);
   }
+  if (family === "systemMedium") {
+    return renderMedium(results);
+  }
+  if (family === "systemLarge" || family === "systemExtraLarge") {
+    return renderLarge(results);
+  }
 
-  return renderHomeScreen(results, family === "systemSmall");
+  return renderSmall(results);
 }
 
 async function probeGroup(ctx, group) {
@@ -91,12 +97,12 @@ async function probeGroup(ctx, group) {
   return { group, ok: false, latency: Date.now() - startedAt };
 }
 
-function renderHomeScreen(results, compact) {
+function renderSmall(results) {
   return {
     type: "widget",
     url: "egern:/connections",
-    padding: compact ? 12 : 14,
-    gap: compact ? 8 : 10,
+    padding: 12,
+    gap: 8,
     backgroundColor: COLORS.background,
     refreshAfter: nextRefresh(),
     children: [
@@ -113,7 +119,7 @@ function renderHomeScreen(results, compact) {
             color: COLORS.accent,
           },
           { type: "spacer", length: 6 },
-          text("策略出口", compact ? 14 : 15, "bold", COLORS.text),
+          text("策略出口", 14, "bold", COLORS.text),
           { type: "spacer" },
           {
             type: "date",
@@ -124,12 +130,24 @@ function renderHomeScreen(results, compact) {
           },
         ],
       },
-      ...results.map((result) => renderCard(result, compact)),
+      ...results.map(renderSmallCard),
     ],
   };
 }
 
-function renderCard(result, compact) {
+function renderMedium(results) {
+  return {
+    type: "widget",
+    url: "egern:/connections",
+    padding: [10, 12],
+    gap: 6,
+    backgroundColor: COLORS.background,
+    refreshAfter: nextRefresh(),
+    children: results.map(renderMediumRow),
+  };
+}
+
+function renderMediumRow(result) {
   const flag = result.ok ? countryFlag(result.countryCode) : "⚠️";
   const location = result.ok
     ? [result.country, result.city].filter(Boolean).join(" · ") || "未知地区"
@@ -141,8 +159,140 @@ function renderCard(result, compact) {
   return {
     type: "stack",
     direction: "column",
-    gap: compact ? 3 : 5,
-    padding: compact ? [8, 10] : [10, 12],
+    alignItems: "start",
+    gap: 3,
+    padding: [7, 10],
+    backgroundColor: COLORS.card,
+    borderRadius: 11,
+    children: [
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "center",
+        children: [
+          text(result.group, 12, "semibold", COLORS.text, 1, 0.7),
+          { type: "spacer" },
+          text(`${result.latency} ms`, 10, "semibold", result.ok ? COLORS.success : COLORS.error, 1),
+        ],
+      },
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "center",
+        gap: 5,
+        children: [
+          text(flag, 13, "regular", COLORS.text, 1),
+          { ...text(location, 11, "medium", result.ok ? COLORS.text : COLORS.error, 1, 0.65), flex: 1 },
+        ],
+      },
+      text(detail, 9, "regular", COLORS.secondary, 1, 0.5),
+    ],
+  };
+}
+
+function renderLarge(results) {
+  return {
+    type: "widget",
+    url: "egern:/connections",
+    padding: 16,
+    gap: 12,
+    backgroundColor: COLORS.background,
+    refreshAfter: nextRefresh(),
+    children: [
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "center",
+        children: [
+          {
+            type: "image",
+            src: "sf-symbol:point.3.connected.trianglepath.dotted",
+            width: 18,
+            height: 18,
+            color: COLORS.accent,
+          },
+          { type: "spacer", length: 7 },
+          text("策略出口", 16, "bold", COLORS.text),
+          { type: "spacer" },
+          {
+            type: "date",
+            date: new Date().toISOString(),
+            format: "time",
+            font: { size: 11, weight: "medium" },
+            textColor: COLORS.secondary,
+          },
+        ],
+      },
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "start",
+        gap: 12,
+        flex: 1,
+        children: results.map(renderLargeCard),
+      },
+    ],
+  };
+}
+
+function renderLargeCard(result) {
+  const flag = result.ok ? countryFlag(result.countryCode) : "⚠️";
+  const location = result.ok
+    ? [result.country, result.city].filter(Boolean).join(" · ") || "未知地区"
+    : "探测失败";
+  const network = result.ok
+    ? [formatAsn(result.asn), result.isp].filter(Boolean).join(" · ")
+    : "请检查策略组名称";
+
+  return {
+    type: "stack",
+    direction: "column",
+    alignItems: "start",
+    gap: 8,
+    padding: 14,
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    children: [
+      text(result.group, 15, "bold", COLORS.text, 1, 0.65),
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "center",
+        gap: 7,
+        children: [
+          text(flag, 24, "regular", COLORS.text, 1),
+          { ...text(location, 14, "semibold", result.ok ? COLORS.text : COLORS.error, 2, 0.65), flex: 1 },
+        ],
+      },
+      { type: "spacer" },
+      text(result.ok ? result.ip : "暂无出口信息", 13, "medium", COLORS.text, 1, 0.6),
+      text(network, 11, "regular", COLORS.secondary, 2, 0.55),
+      {
+        type: "stack",
+        direction: "row",
+        alignItems: "center",
+        children: [
+          text("探测延迟", 11, "medium", COLORS.secondary, 1),
+          { type: "spacer" },
+          text(`${result.latency} ms`, 12, "bold", result.ok ? COLORS.success : COLORS.error, 1),
+        ],
+      },
+    ],
+  };
+}
+
+function renderSmallCard(result) {
+  const flag = result.ok ? countryFlag(result.countryCode) : "⚠️";
+  const location = result.ok
+    ? [result.country, result.city].filter(Boolean).join(" · ") || "未知地区"
+    : "探测失败，请检查分组名称";
+
+  return {
+    type: "stack",
+    direction: "column",
+    gap: 3,
+    padding: [8, 10],
     backgroundColor: COLORS.card,
     borderRadius: 12,
     children: [
@@ -151,7 +301,7 @@ function renderCard(result, compact) {
         direction: "row",
         alignItems: "center",
         children: [
-          text(result.group, compact ? 12 : 13, "semibold", COLORS.text, 1),
+          text(result.group, 12, "semibold", COLORS.text, 1),
           { type: "spacer" },
           text(`${result.latency} ms`, 10, "medium", result.ok ? COLORS.success : COLORS.error, 1),
         ],
@@ -162,13 +312,10 @@ function renderCard(result, compact) {
         alignItems: "center",
         gap: 5,
         children: [
-          text(flag, compact ? 14 : 16, "regular", COLORS.text, 1),
-          text(location, compact ? 11 : 12, "medium", result.ok ? COLORS.text : COLORS.error, 1),
+          text(flag, 14, "regular", COLORS.text, 1),
+          text(location, 11, "medium", result.ok ? COLORS.text : COLORS.error, 1),
         ],
       },
-      ...(compact
-        ? []
-        : [text(detail, 10, "regular", COLORS.secondary, 1, 0.55)]),
     ],
   };
 }
