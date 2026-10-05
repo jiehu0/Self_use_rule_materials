@@ -1,7 +1,7 @@
 import fnmatch
 import unittest
 
-from generate import build_mappings, merge_mappings, normalize_domain, parse_fries, parse_rules, render
+from generate import build_mappings, dns_bootstraps, merge_mappings, normalize_domain, parse_fries, parse_rules, render
 
 
 FIXTURE = b"""no_resolve: true
@@ -25,6 +25,7 @@ FRIES = b"""#!name=DNS enhanced
 # *.google.com = server:https://dns.google/dns-query
 dns.google = 8.8.8.8
 talk.google.com = 108.177.125.188
+doh.pub = 1.12.12.12
 *.qq.com = server:https://doh.pub/dns-query
 *.aliyun.* = server:https://dns.alidns.com/dns-query
 *.douyin.com = server:180.184.1.1
@@ -100,6 +101,13 @@ class DNSMappingTests(unittest.TestCase):
         self.assertEqual(len(selections), 4)
         self.assertNotIn("*.google.com", selections)
         self.assertNotIn("talk.google.com", selections)
+
+    def test_only_dns_infrastructure_fixed_addresses_are_kept(self):
+        selections = parse_fries(FRIES)
+        self.assertEqual(dns_bootstraps(FRIES, selections), {"doh.pub": "1.12.12.12"})
+        merged = merge_mappings({"domain_suffix_set": ["doh.pub"]}, selections, dns_bootstraps(FRIES, selections))
+        self.assertEqual(merged["doh.pub"], "1.12.12.12")
+        self.assertEqual(merged["*.doh.pub"], "server:223.5.5.5")
 
     def test_fries_unknown_section_or_duplicate_fails(self):
         for extra in (b"[Script]\n", b"*.qq.com = server:223.5.5.5\n"):

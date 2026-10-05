@@ -8,6 +8,7 @@ import ipaddress
 import json
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 from urllib.request import urlopen
 
 SOURCE = "https://raw.githubusercontent.com/Repcz/Tool/X/Egern/Rules/ChinaDomain.yaml"
@@ -125,11 +126,25 @@ def inherited_server(pattern, selections):
     return None
 
 
-def merge_mappings(rules, selections):
+def dns_bootstraps(source, selections):
+    """Keep upstream fixed IPs only for encrypted DNS servers used by selections."""
+    hosts = {urlsplit(value[7:]).hostname for value in selections.values() if "://" in value}
+    fixed = {}
+    for line in source.decode("utf-8-sig").splitlines():
+        if line.lstrip().startswith("#") or "=" not in line:
+            continue
+        key, value = (part.strip() for part in line.split("=", 1))
+        if key.lower() in hosts and not value.startswith("server:"):
+            fixed[key.lower()] = str(ipaddress.ip_address(value))
+    return fixed
+
+
+def merge_mappings(rules, selections, bootstraps=None):
     merged = {pattern: "server:system" for domain in SYSTEM_DOMAINS
               for pattern in (domain, "*." + domain)}
     merged.update({key: value for key, value in selections.items() if key not in merged})
     priority = merged.copy()
+    merged.update(bootstraps or {})
     for pattern in build_mappings(rules):
         if pattern not in merged:
             # Inherit campus exceptions as well as the upstream selections.
@@ -140,7 +155,7 @@ def merge_mappings(rules, selections):
 def render(source, fries_source):
     rules = parse_rules(source.decode("utf-8-sig"))
     selections = parse_fries(fries_source)
-    mappings = merge_mappings(rules, selections)
+    mappings = merge_mappings(rules, selections, dns_bootstraps(fries_source, selections))
     license_text = (HERE / "Repcz-LICENSE.txt").read_text(encoding="utf-8")
     fries_license = (HERE / "GetSomeFries-LICENSE.txt").read_text(encoding="utf-8")
     header = [

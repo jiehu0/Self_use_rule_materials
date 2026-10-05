@@ -13,7 +13,7 @@
 # Source SHA-256: 7d767fa5d6711905e566d910875f6698beeb202edda6a2d0d0873f0c92ee5426
 # Domain source counts: domain_set=57, domain_suffix_set=12825, domain_keyword_set=1
 # Not applicable to DNS Host matching: ip_cidr_set=321, ip_cidr6_set=9, user_agent_set=10
-# Generated Host mappings: 25770
+# Generated Host mappings: 25774
 # Does not replace global DNS, traffic rules, or node DNS settings.
 # GetSomeFries: Copyright VirgilClyne; distributed under GPL-3.0.
 # Complete upstream license follows:
@@ -914,6 +914,11 @@ upos-sz-upcdntx.bilivideo.com = server:https://doh.pub/dns-query
 *.tw = server:https://dns.twnic.tw/dns-query
 *.taipei = server:https://dns.twnic.tw/dns-query
 *.he.net = server:https://ordns.he.net/dns-query
+dns.alidns.com = 223.5.5.5
+doh.pub = 1.12.12.12
+doh.360.cn = 23.6.48.18
+dns.twnic.tw = 101.101.101.101
+ordns.he.net = 74.82.42.42
 *-tiktokcdn-com* = server:223.5.5.5
 *.001dl.cn = server:223.5.5.5
 *.001wifi.com = server:223.5.5.5
@@ -17076,7 +17081,6 @@ docschina.org = server:223.5.5.5
 doctoryou.ai = server:223.5.5.5
 doctoryou.cn = server:223.5.5.5
 dogedoge.com = server:223.5.5.5
-doh.pub = server:223.5.5.5
 dolfincdnx.cn = server:223.5.5.5
 dolfincdnx.com = server:223.5.5.5
 dolfincdnx.net = server:223.5.5.5

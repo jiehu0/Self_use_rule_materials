@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/jiehu0/Self_use_rule_materials/main/loon/China
 
 ## 合并范围与冲突处理
 
-- 只导入 GetSomeFries `[Host]` 中有效的 `server:` 规则。Google 消息服务等固定目标 IP 映射不属于 DNS 服务器选择，不复制；主配置已有的 DoH 服务器固定 IP 映射继续保留。
+- 导入 GetSomeFries `[Host]` 中有效的 `server:` 规则，并保留这些规则使用的 DoH 服务器自身的固定 IP（如 `doh.pub`），避免引导解析依赖。Google 消息服务等普通应用的固定目标 IP 不复制；主配置已有的 DoH 服务器固定 IP 映射继续保留。
 - 同名映射去重，保留 GetSomeFries 的值。
 - 国内名单中更具体的域名也继承已匹配的 GetSomeFries DNS。例如 `*.qq.com` 指定腾讯 DoH 时，名单中的 `api.qq.com` 或 `*.wx.qq.com` 不再生成阿里 DNS 覆盖。
 - 对 `*.aliyun.*`、`*.bytedance.*` 等通配模式同样执行继承。
